@@ -29,9 +29,9 @@ function checkCharacterForState(editorState, character) {
   const key = selection.getStartKey();
   const currentBlock = contentState.getBlockForKey(key);
   const type = currentBlock.getType();
-  if (editorState === newEditorState) {
-    newEditorState = handleImage(editorState, character);
-  }
+  // if (editorState === newEditorState) {
+  //   newEditorState = handleImage(editorState, character);
+  // }
   if (editorState === newEditorState) {
     newEditorState = handleLink(editorState, character);
   }
@@ -90,7 +90,7 @@ const createMarkdownShortcutsPlugin = (config = { insertEmptyBlockOnReturnWithMo
         wrapper: <pre spellCheck="false" />,
       },
     }).merge(checkboxBlockRenderMap),
-    decorators: [createLinkDecorator(config, store), createImageDecorator(config, store)],
+    decorators: [createLinkDecorator(config, store) /* , createImageDecorator(config, store) */],
     initialize({ setEditorState, getEditorState }) {
       store.setEditorState = setEditorState;
       store.getEditorState = getEditorState;

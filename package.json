@@ -20,14 +20,21 @@
   },
   "watch": {
     "test": {
-      "patterns": ["src/**/*.js"]
+      "patterns": [
+        "src/**/*.js"
+      ]
     }
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ngs/draft-js-markdown-shortcuts-plugin.git"
   },
-  "keywords": ["draftjs", "editor", "plugin", "markdown"],
+  "keywords": [
+    "draftjs",
+    "editor",
+    "plugin",
+    "markdown"
+  ],
   "author": "Atsushi Nagase",
   "license": "MIT",
   "bugs": {
@@ -100,7 +107,9 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
-  "contributors": ["Atsushi Nagase <a@ngs.io>"],
+  "contributors": [
+    "Atsushi Nagase <a@ngs.io>"
+  ],
   "dependencies": {
     "decorate-component-with-props": "^1.1.0",
     "draft-js": "~0.11.5",
