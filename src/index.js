@@ -13,13 +13,13 @@ import handleBlockType from './modifiers/handleBlockType';
 import handleInlineStyle from './modifiers/handleInlineStyle';
 import handleNewCodeBlock from './modifiers/handleNewCodeBlock';
 import insertEmptyBlock from './modifiers/insertEmptyBlock';
-import handleLink from './modifiers/handleLink';
-import handleImage from './modifiers/handleImage';
+// import handleLink from './modifiers/handleLink';
+// import handleImage from './modifiers/handleImage';
 import leaveList from './modifiers/leaveList';
 import insertText from './modifiers/insertText';
 import changeCurrentBlockType from './modifiers/changeCurrentBlockType';
-import createLinkDecorator from './decorators/link';
-import createImageDecorator from './decorators/image';
+// import createLinkDecorator from './decorators/link';
+// import createImageDecorator from './decorators/image';
 import { replaceText } from './utils';
 
 function checkCharacterForState(editorState, character) {
@@ -32,9 +32,9 @@ function checkCharacterForState(editorState, character) {
   // if (editorState === newEditorState) {
   //   newEditorState = handleImage(editorState, character);
   // }
-  if (editorState === newEditorState) {
-    newEditorState = handleLink(editorState, character);
-  }
+  // if (editorState === newEditorState) {
+  //   newEditorState = handleLink(editorState, character);
+  // }
   if (editorState === newEditorState && type !== 'code-block') {
     newEditorState = handleInlineStyle(editorState, character);
   }
@@ -90,7 +90,7 @@ const createMarkdownShortcutsPlugin = (config = { insertEmptyBlockOnReturnWithMo
         wrapper: <pre spellCheck="false" />,
       },
     }).merge(checkboxBlockRenderMap),
-    decorators: [createLinkDecorator(config, store) /* , createImageDecorator(config, store) */],
+    // decorators: [createLinkDecorator(config, store) /* , createImageDecorator(config, store) */],
     initialize({ setEditorState, getEditorState }) {
       store.setEditorState = setEditorState;
       store.getEditorState = getEditorState;
