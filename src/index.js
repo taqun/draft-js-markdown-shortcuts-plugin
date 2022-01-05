@@ -1,4 +1,4 @@
-import React from 'react';
+import { Modifier, EditorState } from 'draft-js';
 import {
   blockRenderMap as checkboxBlockRenderMap,
   CheckableListItem,
@@ -11,31 +11,14 @@ import { Map } from 'immutable';
 import adjustBlockDepth from './modifiers/adjustBlockDepth';
 import handleBlockType from './modifiers/handleBlockType';
 import handleInlineStyle from './modifiers/handleInlineStyle';
-import handleNewCodeBlock from './modifiers/handleNewCodeBlock';
 import insertEmptyBlock from './modifiers/insertEmptyBlock';
-// import handleLink from './modifiers/handleLink';
-// import handleImage from './modifiers/handleImage';
 import leaveList from './modifiers/leaveList';
-import insertText from './modifiers/insertText';
-import changeCurrentBlockType from './modifiers/changeCurrentBlockType';
-// import createLinkDecorator from './decorators/link';
-// import createImageDecorator from './decorators/image';
 import { replaceText } from './utils';
 
 function checkCharacterForState(editorState, character) {
   let newEditorState = handleBlockType(editorState, character);
-  const contentState = editorState.getCurrentContent();
-  const selection = editorState.getSelection();
-  const key = selection.getStartKey();
-  const currentBlock = contentState.getBlockForKey(key);
-  const type = currentBlock.getType();
-  // if (editorState === newEditorState) {
-  //   newEditorState = handleImage(editorState, character);
-  // }
-  // if (editorState === newEditorState) {
-  //   newEditorState = handleLink(editorState, character);
-  // }
-  if (editorState === newEditorState && type !== 'code-block') {
+
+  if (editorState === newEditorState) {
     newEditorState = handleInlineStyle(editorState, character);
   }
   return newEditorState;
@@ -63,34 +46,38 @@ function checkReturnForState(editorState, ev, { insertEmptyBlockOnReturnWithModi
   ) {
     newEditorState = insertEmptyBlock(editorState);
   }
-  if (newEditorState === editorState && type !== 'code-block' && /^```([\w-]+)?$/.test(text)) {
-    newEditorState = handleNewCodeBlock(editorState);
-  }
-  if (newEditorState === editorState && type === 'code-block') {
-    if (/```\s*$/.test(text)) {
-      newEditorState = changeCurrentBlockType(newEditorState, type, text.replace(/\n```\s*$/, ''));
-      newEditorState = insertEmptyBlock(newEditorState);
-    } else {
-      newEditorState = insertText(editorState, '\n');
-    }
-  }
   if (editorState === newEditorState) {
     newEditorState = handleInlineStyle(editorState, '\n');
   }
   return newEditorState;
 }
 
+const unstickyInlineStyles = (character, editorState) => {
+  const selection = editorState.getSelection();
+  if (!selection.isCollapsed()) return editorState;
+
+  const startOffset = selection.getStartOffset();
+  const content = editorState.getCurrentContent();
+  const block = content.getBlockForKey(selection.getStartKey());
+  const entity = block.getEntityAt(startOffset);
+  if (entity !== null) return editorState;
+
+  // If we're currently in a style, but the next character doesn't have a style (or doesn't exist)
+  // we insert the characters manually without the inline style to "unsticky" them
+  const style = block.getInlineStyleAt(startOffset - 1);
+  if (style.size === 0) return editorState;
+  const nextStyle = block.getInlineStyleAt(startOffset);
+  if (nextStyle.size !== 0) return editorState;
+
+  const newContent = Modifier.insertText(content, selection, character);
+  return EditorState.push(editorState, newContent, 'insert-characters');
+};
+
 const createMarkdownShortcutsPlugin = (config = { insertEmptyBlockOnReturnWithModifierKey: true }) => {
   const store = {};
   return {
     store,
-    blockRenderMap: Map({
-      'code-block': {
-        element: 'code',
-        wrapper: <pre spellCheck="false" />,
-      },
-    }).merge(checkboxBlockRenderMap),
-    // decorators: [createLinkDecorator(config, store) /* , createImageDecorator(config, store) */],
+    blockRenderMap: Map({}).merge(checkboxBlockRenderMap),
     initialize({ setEditorState, getEditorState }) {
       store.setEditorState = setEditorState;
       store.getEditorState = getEditorState;
@@ -142,11 +129,19 @@ const createMarkdownShortcutsPlugin = (config = { insertEmptyBlockOnReturnWithMo
       if (character.match(/[A-z0-9_*~`]/)) {
         return 'not-handled';
       }
+
+      const unsticky = unstickyInlineStyles(character, editorState);
+      if (editorState !== unsticky) {
+        store.setEditorState(unsticky);
+        return 'handled';
+      }
+
       const newEditorState = checkCharacterForState(editorState, character);
       if (editorState !== newEditorState) {
         store.setEditorState(newEditorState);
         return 'handled';
       }
+
       return 'not-handled';
     },
     handlePastedText(text, html, editorState) {
